@@ -1,0 +1,46 @@
+name: Build macOS App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    
+    - name: Build App
+      run: |
+        xcodebuild -project sdvg.xcodeproj \
+                   -scheme sdvg \
+                   -configuration Release \
+                   -derivedDataPath ./build \
+                   build
+    
+    - name: Create App Bundle
+      run: |
+        # Находим собранное приложение
+        APP_PATH=$(find ./build -name "*.app" -type d | head -1)
+        
+        # Копируем в корень
+        cp -R "$APP_PATH" "./sdvg.app"
+        
+        # Создаем ZIP архив
+        zip -r sdvg-app.zip sdvg.app
+    
+    - name: Upload App
+      uses: actions/upload-artifact@v4
+      with:
+        name: sdvg-macos-app
+        path: sdvg-app.zip
+        retention-days: 30
