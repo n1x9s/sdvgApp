@@ -11,6 +11,7 @@ struct ContentView: View {
     @State private var showDragDrop = false // Изменим по умолчанию на false, чтобы сразу показывать GIF
     @State private var alwaysOnTop = true
     @State private var currentGifName = "gif" // По умолчанию показываем gif.gif
+    @StateObject private var windowManager = WindowManager()
     
     var body: some View {
         VStack(spacing: 0) {
@@ -29,6 +30,15 @@ struct ContentView: View {
                 }
                 
                 Spacer()
+                
+                Button(action: {
+                    resetToTopRight()
+                }) {
+                    Image(systemName: "arrow.up.right.square")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Переместить в правый верхний угол")
                 
                 Button(action: {
                     alwaysOnTop.toggle()
@@ -120,6 +130,10 @@ struct ContentView: View {
                 window.collectionBehavior = enabled ? 
                     [.canJoinAllSpaces, .fullScreenAuxiliary] : 
                     [.canJoinAllSpaces]
+                    
+                // Сохраняем возможность перемещения окна
+                window.isMovable = true
+                window.isMovableByWindowBackground = true
             }
         }
     }
@@ -154,6 +168,14 @@ struct ContentView: View {
         }
         
         return FileManager.default.currentDirectoryPath
+    }
+    
+    private func resetToTopRight() {
+        DispatchQueue.main.async {
+            if let window = NSApplication.shared.windows.first {
+                windowManager.resetWindowToTopRight(window)
+            }
+        }
     }
 }
 
